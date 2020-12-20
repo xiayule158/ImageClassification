@@ -1,0 +1,6 @@
+链接: https://pan.baidu.com/s/1TiwN0OP_9k6SPJjrs-XNHQ  密码: 2d2t
+将下载的图像数据直接提取到data文件夹下
+目录结构
+data
+	Training
+	Valid
