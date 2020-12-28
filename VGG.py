@@ -10,28 +10,12 @@ for gpu in physical_devices:
     tf.config.experimental.set_memory_growth(gpu, True)
 image_root = '../data'
 log_dir = './vgg16_callbacks'
+width, height, channels = 224, 224, 3
 
 
 class VGG:
     def __init__(self):
         pass
-
-    def vgg_block(self, conv_num, channels):
-        """
-        定义VGG的一个块
-        :param conv_num:一个块中的卷积数
-        :param channels: 输出通道是
-        :return: 一个vgg块
-        """
-        net = keras.models.Sequential()
-
-        for _ in range(conv_num):  # 加入制定的卷积层数
-            # filters = 3, kernel_size = 3, strides = 1, padding = 'same', input_shape = img.shape)
-            net.add(keras.layers.Conv2D(filters=channels, kernel_size=3, padding='same', activation=r'relu'))
-            net.add(keras.layers.BatchNormalization())
-        net.add(keras.layers.MaxPool2D(strides=2, pool_size=2))
-
-        return net
 
     def vgg_stack(self, architecture):
         """
@@ -39,10 +23,15 @@ class VGG:
         :param architecture: tuple的list
         :return:
         """
-        net = keras.models.Sequential()
+        net = []
+        for (conv_num, c_n) in architecture:
+            for _ in range(conv_num):  # 加入制定的卷积层数
+                net.append(keras.layers.Conv2D(filters=c_n, kernel_size=3, padding='same',
+                                               activation=r'relu'))
+                net.append(keras.layers.BatchNormalization())
+                net.append(keras.layers.Activation('relu'))
 
-        for (conv_num, channels) in architecture:
-            net.add(self.vgg_block(conv_num, channels))
+            net.append(keras.layers.MaxPool2D(strides=2, pool_size=2))
         return net
 
     def vgg11(self):
@@ -51,13 +40,20 @@ class VGG:
         :return:
         """
         output_num = 3
-        architecture = [(1, 128), (2, 256), (2, 512), (2, 512)]
+
         net = keras.models.Sequential()
+        # block 1
         net.add(keras.layers.Conv2D(filters=64, kernel_size=3, padding='same', activation=r'relu',
-                                    input_shape=[224, 224, 3]))
+                                    input_shape=[width, height, channels]))
         net.add(keras.layers.MaxPool2D(strides=2, pool_size=2))
 
-        net.add(self.vgg_stack(architecture))
+        # block 2
+        architecture = [(1, 128), (2, 256), (2, 512), (2, 512)]
+        layers = self.vgg_stack(architecture)
+        for layer in layers:
+            net.add(layer)
+
+        # block 3
         net.add(keras.layers.Flatten())
         net.add(keras.layers.Dense(256, activation=r'relu'))
         net.add(keras.layers.Dropout(0.5))
@@ -71,7 +67,7 @@ class VGG:
 
     def vgg16(self):
         """
-        定义VGG11的结构
+        定义VGG16的结构
         :return:
         """
         output_num = 3
@@ -80,7 +76,9 @@ class VGG:
         net.add(keras.layers.Conv2D(filters=64, kernel_size=3, padding='same', activation=r'relu',
                                     input_shape=[224, 224, 3]))
 
-        net.add(self.vgg_stack(architecture))
+        layers = self.vgg_stack(architecture)
+        for layer in layers:
+            net.add(layer)
         net.add(keras.layers.Flatten())
         net.add(keras.layers.Dense(4096, activation=r'relu'))
         net.add(keras.layers.Dropout(0.5))
@@ -95,7 +93,7 @@ class VGG:
 
     def vgg19(self):
         """
-        定义VGG11的结构
+        定义VGG19的结构
         :return:
         """
         output_num = 3
@@ -103,7 +101,9 @@ class VGG:
         net = keras.models.Sequential()
         net.add(keras.layers.Conv2D(filters=64, kernel_size=3, padding='same', activation=r'relu',
                                     input_shape=[224, 224, 3]))
-        net.add(self.vgg_stack(architecture))
+        layers = self.vgg_stack(architecture)
+        for layer in layers:
+            net.add(layer)
         net.add(keras.layers.Flatten())
         net.add(keras.layers.Dense(256, activation=r'relu'))
         net.add(keras.layers.Dropout(0.5))
@@ -138,5 +138,5 @@ class VGG:
 if __name__ == r'__main__':
     print(tf.__version__)
     vgg_obj = VGG()
-    vgg_obj.vgg16()
+    vgg_obj.vgg11()
     # vgg_obj.train()
